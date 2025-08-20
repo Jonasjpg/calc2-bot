@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+sympy
+latex2mathml
+matplotlib
+pydantic
+pytest
+gunicorn
