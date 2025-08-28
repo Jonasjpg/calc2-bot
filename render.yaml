@@ -3,6 +3,10 @@ services:
     name: calc2-bot
     env: python
     plan: free
-    buildCommand: pip install -r services/cas-python/requirements.txt
-    startCommand: gunicorn -k uvicorn.workers.UvicornWorker services.cas-python.app.main:app --bind 0.0.0.0:$PORT
+    buildCommand: "pip install -r services/cas-python/requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    workingDirectory: services/cas-python
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
     autoDeploy: true
