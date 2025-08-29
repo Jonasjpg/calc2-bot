@@ -1,10 +1,14 @@
 from fastapi.testclient import TestClient
-import sys, os
+import os
+import sys
 
-# Ajustar sys.path para encontrar 'app'
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Asegurar que Python encuentre el paquete 'app' (carpeta hermana de 'tests')
+CURRENT_DIR = os.path.dirname(__file__)
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-from app.schemas import IntegralRequest
+from app.main import app  # 👈 importamos la instancia FastAPI
 
 client = TestClient(app)
 
