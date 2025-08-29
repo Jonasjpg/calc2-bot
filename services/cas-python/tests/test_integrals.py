@@ -4,7 +4,7 @@ import sys, os
 # Ajustar sys.path para encontrar 'app'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.main import app
+from app.schemas import IntegralRequest
 
 client = TestClient(app)
 
