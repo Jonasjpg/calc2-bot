@@ -1,14 +1,13 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+
 from .solver import solve_integral
+from .schemas import SolveRequest   # 👈 ahora importamos el modelo aquí
 
 app = FastAPI(title="Calc2 Bot MVP (Python)", version="1.0.0")
 
-from fastapi.middleware.cors import CORSMiddleware
-
 # Configuración CORS para permitir acceso desde cualquier origen
-# (útil para pruebas, pero en producción deberías restringirlo a tus dominios)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],            # Abierto: permite cualquier origen (útil para pruebas)
@@ -16,28 +15,13 @@ app.add_middleware(
     allow_methods=["*"],            # GET, POST, PUT, DELETE, etc.
     allow_headers=["*"],            # Authorization, Content-Type, etc.
 )
-# Si quieres restringir a dominios específicos, descomenta y ajusta la lista:
-#app.add_middleware(
-#    CORSMiddleware,
-#    allow_origins=[
-#        "http://127.0.0.1:5500",    # VS Code Live Server
-#        "http://localhost:5173",    # Vite
-#        "https://tu-frontend.github.io",   # GitHub Pages (si lo usás)
-#    ],
-#    allow_credentials=True,
-#    allow_methods=["*"],
-#    allow_headers=["*"],
-#)
 
-# Modelo de solicitud para resolver integrales
-class SolveRequest(BaseModel):
-    type: str  # "integral"
-    input: str # ej: "x*exp(2*x) dx"
-
+# Endpoint de salud
 @app.get("/health")
 def health():
     return {"ok": True}
 
+# Endpoint principal para resolver integrales
 @app.post("/solve")
 def solve(req: SolveRequest):
     if req.type.lower() != "integral":
