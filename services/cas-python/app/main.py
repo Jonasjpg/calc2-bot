@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .solver import solve_integral
-from .schemas import SolveRequest   # 👈 ahora importamos el modelo aquí
+from .schemas import SolveRequest   # ahora importamos el modelo aquí
 
 app = FastAPI(title="Calc2 Bot MVP (Python)", version="1.0.0")
 
