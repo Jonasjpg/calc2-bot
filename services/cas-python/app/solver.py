@@ -1,4 +1,4 @@
-from sympy import symbols, integrate, diff
+﻿from sympy import symbols, integrate, diff
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.printing.latex import latex
 
@@ -20,12 +20,12 @@ def solve_integral(text: str):
     ]
 
     checks = [
-        rf"\frac{{d}}{{dx}}\left({latex(res)}\right) = {latex(check)} \\\\ "
-        + (r"\text{✓ correcto}" if ok else r"\text{✗ revisar}")
+        rf"\\frac{{d}}{{dx}}\\left({latex(res)}\\right) = {latex(check)} \\\\ "
+        + (r"\\text{✓ correcto}" if ok else r"\\text{✗ revisar}")
     ]
 
     return {
-        "problem_latex": rf"\int {latex(expr)}\,dx",
+        "problem_latex": rf"\\int {latex(expr)}\\,dx",
         "steps_latex": steps,
         "result_latex": rf"{latex(res)} + C",
         "checks": checks,
