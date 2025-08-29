@@ -23,6 +23,7 @@ def solve_integral(text: str):
         "problem_latex": rf"\\int {latex(expr)}\\,dx",
         "steps_latex": steps,
         "result_latex": rf"{latex(res)} + C",
-        "checks": [rf"\\frac{{d}}{{dx}}\\left({latex(res)}\\right) = {latex(check)} \\\\ {'\\\\text{✓ correcto}' if ok else '\\\\text{✗ revisar}'}"],
+        "checks": [rf"\\frac{{d}}{{dx}}\\left({latex(res)}\\right) = {latex(check)} \\\\ " + (r"\\text{✓ correcto}" if ok else r"\\text{✗ revisar}")],
+
         "plots": []
     }
