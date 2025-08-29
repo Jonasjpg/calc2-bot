@@ -5,3 +5,4 @@ latex2mathml
 matplotlib
 pydantic
 pytest
+httpx
