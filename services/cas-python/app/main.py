@@ -28,65 +28,312 @@ def solve(req: SolveRequest):
         return {"error": "MVP: solo integrales indefinidas (type='integral')"}
     return solve_integral(req.input)
 
-# UI mínima con MathJax para probar rápido
+from fastapi.responses import HTMLResponse
+
+# UI bonita con MathJax (drop-in)
 @app.get("/", response_class=HTMLResponse)
 def index():
     return """
-<!doctype html><html lang="es"><head>
-<meta charset="utf-8"/><title>Calc2 Bot — MVP</title>
-<script>window.MathJax={tex:{inlineMath:[['$','$'],['\\\\(','\\\\)']]},svg:{fontCache:'global'}};</script>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Calc2 Bot — MVP</title>
+
+<!-- MathJax -->
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
 <style>
-body{font-family:system-ui;max-width:900px;margin:2rem auto;padding:0 1rem;line-height:1.5}
-.card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
-textarea{width:100%;min-height:90px;padding:10px;border-radius:8px;border:1px solid #ccc;font-family:Consolas,monospace}
-button{padding:10px 16px;border-radius:8px;border:0;background:#1a73e8;color:#fff;cursor:pointer}
-.muted{color:#666;font-size:.9rem}.error{color:#b00020}
-</style></head>
+  :root{
+    --bg: #0f1222;
+    --fg: #0b0f1a;
+    --fg-2:#151a2b;
+    --txt:#eaf0ff;
+    --muted:#9aa3b2;
+    --primary:#7c9cff;
+    --primary-2:#8fb0ff;
+    --accent:#00e0b8;
+    --danger:#ff6b6b;
+    --ring: rgba(124,156,255,.55);
+    --card: rgba(255,255,255,.06);
+    --card-border: rgba(255,255,255,.14);
+    --shadow: 0 10px 30px rgba(10,15,40,.35);
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg: #f6f8ff;
+      --fg:#f2f4ff;
+      --fg-2:#ffffff;
+      --txt:#1a2033;
+      --muted:#637089;
+      --primary:#3558ff;
+      --primary-2:#5f7cff;
+      --accent:#0fba92;
+      --card: rgba(255,255,255,.85);
+      --card-border: rgba(10,15,40,.08);
+      --shadow: 0 10px 25px rgba(25, 35, 80, .15);
+    }
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    color:var(--txt);
+    background:
+      radial-gradient(1200px 600px at 10% -20%, #2a3cff22 15%, transparent 50%),
+      radial-gradient(1300px 700px at 110% 0%, #00e0b822 10%, transparent 55%),
+      linear-gradient(180deg, var(--bg), var(--fg));
+  }
+
+  .wrap{max-width:980px;margin-inline:auto;padding:32px 18px 80px}
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;
+  }
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{
+    width:40px;height:40px;border-radius:12px;
+    background: linear-gradient(135deg,var(--primary),var(--accent));
+    box-shadow: var(--shadow);
+  }
+  .title{font-weight:800;letter-spacing:.3px;font-size:22px}
+  .sub{color:var(--muted);font-size:13px}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:18px;
+    padding:18px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(10px);
+  }
+  .grid{display:grid;gap:16px}
+  @media (min-width:960px){ .grid-2{grid-template-columns: 1fr 1fr} }
+
+  .label{font-size:14px;color:var(--muted);margin-bottom:6px}
+  textarea{
+    width:100%;min-height:120px;resize:vertical;
+    background:var(--fg-2);
+    color:var(--txt);
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:14px 14px 36px 14px;
+    line-height:1.5;font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    outline:none;transition: box-shadow .15s, border-color .15s;
+  }
+  textarea:focus{
+    border-color: var(--primary-2);
+    box-shadow: 0 0 0 4px var(--ring);
+  }
+
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .btn{
+    appearance:none;border:0;border-radius:12px;padding:12px 16px;
+    color:white;background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    cursor:pointer;font-weight:700;letter-spacing:.2px;
+    box-shadow: var(--shadow);transition: transform .06s ease, opacity .15s;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .btn.secondary{
+    background:transparent;color:var(--txt);
+    border:1px solid var(--card-border);
+  }
+  .btn.ghost{
+    background:transparent;color:var(--muted);border:0;padding:8px 10px;box-shadow:none;
+  }
+  .btn[disabled]{opacity:.6;cursor:not-allowed}
+
+  .chip{display:inline-flex;align-items:center;gap:6px;
+    padding:8px 10px;border-radius:999px;border:1px dashed var(--card-border);
+    color:var(--muted);font-size:13px;cursor:pointer;user-select:none}
+  .chip:hover{border-style:solid;color:var(--txt)}
+
+  .muted{color:var(--muted)}
+  .error{color:var(--danger)}
+
+  .result-kv{display:grid;gap:8px}
+  .kv{display:flex;gap:8px;align-items:flex-start}
+  .kv b{min-width:100px;display:inline-block}
+  .box{
+    background:var(--fg-2);border:1px solid var(--card-border);
+    border-radius:12px;padding:12px;overflow:auto
+  }
+
+  .list{margin:0;padding-left:18px}
+  .tools{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+
+  .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+
+  .toast{
+    position:fixed;inset:auto 16px 16px 16px;max-width:520px;margin-inline:auto;
+    background:var(--card);border:1px solid var(--card-border);backdrop-filter:blur(8px);
+    color:var(--txt);padding:12px 14px;border-radius:12px;display:none;box-shadow: var(--shadow)
+  }
+  .spinner {
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
+    animation: spin .8s linear infinite;display:inline-block;margin-right:8px
+  }
+  @keyframes spin{to{transform:rotate(1turn)}}
+</style>
+</head>
 <body>
-<h1>Calc2 Bot — MVP (FastAPI + SymPy)</h1>
-<p class="muted">Escribí la integral (ej: <code>x*exp(2*x) dx</code>)</p>
+  <div class="wrap">
+    <header class="nav">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="title">Calc2 Bot</div>
+          <div class="sub">FastAPI + SymPy · Integrales con verificación</div>
+        </div>
+      </div>
+      <button id="themeBtn" class="btn ghost" title="Cambiar tema">🌓</button>
+    </header>
 
-<div class="card">
-  <textarea id="expr" placeholder="x*exp(2*x) dx"></textarea>
-  <div style="margin-top:10px">
-    <button id="solveBtn">Resolver</button>
-    <span id="status" class="muted"></span>
+    <section class="card">
+      <div class="label">Ingresá la integral (Ctrl/⌘+Enter para resolver)</div>
+      <textarea id="expr" placeholder="Ej: x*exp(2*x) dx"></textarea>
+      <div class="row">
+        <button id="solveBtn" class="btn">Resolver</button>
+        <button id="clearBtn" class="btn secondary">Limpiar</button>
+        <span id="status" class="muted"></span>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <span class="muted">Ejemplos:</span>
+        <span class="chip" data-eg="x*exp(2*x) dx">x·e^{2x}</span>
+        <span class="chip" data-eg="sin(x) dx">∫ sin(x)</span>
+        <span class="chip" data-eg="x^2 * cos(x) dx">x²·cos x</span>
+        <span class="chip" data-eg="(e^(3*x) + 1)/x dx">(e^{3x}+1)/x</span>
+      </div>
+    </section>
+
+    <section id="result" class="grid grid-2" style="margin-top:18px; display:none">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h2 style="margin:0">Resultado</h2>
+          <div class="tools">
+            <button id="copyBtn" class="btn secondary" title="Copiar LaTeX">Copiar LaTeX</button>
+          </div>
+        </div>
+
+        <div class="result-kv">
+          <div class="kv"><b>Problema:</b> <div id="problem" class="box"></div></div>
+          <div class="kv"><b>Resultado:</b> <div id="resultLatex" class="box"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Pasos & Verificación</h3>
+        <div class="kv"><b>Pasos:</b> <ol id="steps" class="list"></ol></div>
+        <div class="kv"><b>Chequeos:</b> <div id="checks" class="box"></div></div>
+      </div>
+    </section>
+
+    <div id="toast" class="toast"></div>
+    <footer class="footer">Hecho con ❤️ para Cálculo II · MathJax en cliente</footer>
   </div>
-</div>
-
-<div id="result" class="card" style="display:none">
-  <h2>Resultado</h2>
-  <p><strong>Problema:</strong> <span id="problem"></span></p>
-  <p><strong>Resultado:</strong> <span id="resultLatex"></span></p>
-  <div><strong>Pasos:</strong><ol id="steps"></ol></div>
-  <div><strong>Verificación:</strong><div id="checks"></div></div>
-</div>
-
-<div id="error" class="card error" style="display:none"></div>
 
 <script>
-const $=s=>document.querySelector(s);
-$("#solveBtn").addEventListener("click", async ()=>{
-  const expr=$("#expr").value, status=$("#status"), error=$("#error"),
-        result=$("#result"), problem=$("#problem"), out=$("#resultLatex"),
-        steps=$("#steps"), checks=$("#checks");
-  error.style.display="none"; result.style.display="none"; status.textContent="Resolviendo…";
-  try{
-    const r=await fetch("/solve",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({type:"integral",input:expr})});
-    const data=await r.json();
-    if(!r.ok||data.error) throw new Error(data.error||"Error");
-    problem.innerHTML="$"+data.problem_latex+"$";
-    out.innerHTML="$"+data.result_latex+"$";
-    steps.innerHTML="";
-    (data.steps_latex||[]).forEach(s=>{const li=document.createElement("li"); li.innerHTML=s.includes("$")?s:"$"+s+"$"; steps.appendChild(li);});
-    checks.innerHTML="";
-    (data.checks||[]).forEach(c=>{const p=document.createElement("p"); p.innerHTML="$"+c+"$"; checks.appendChild(p);});
-    result.style.display="block"; window.MathJax?.typeset?.();
-  }catch(e){ error.textContent=e.message; error.style.display="block"; }
-  finally{ status.textContent=""; }
-});
+  const $ = (s) => document.querySelector(s);
+
+  // Tema claro/oscuro
+  const themeBtn = $("#themeBtn");
+  const THEMES = ["light","dark"];
+  let theme = localStorage.getItem("theme") || (matchMedia('(prefers-color-scheme: light)').matches ? "light":"dark");
+  const applyTheme=()=>{ document.documentElement.dataset.theme = theme; };
+  applyTheme();
+  themeBtn.onclick = ()=>{ theme = theme==="light" ? "dark":"light"; localStorage.setItem("theme", theme); applyTheme(); };
+
+  // Autoresize
+  const ta = $("#expr");
+  const autoresize = () => { ta.style.height = "auto"; ta.style.height = (ta.scrollHeight+2) + "px"; }
+  ta.addEventListener("input", autoresize); setTimeout(autoresize, 50);
+
+  // Chips de ejemplo
+  document.querySelectorAll(".chip").forEach(c=>{
+    c.onclick = ()=>{ ta.value = c.dataset.eg; autoresize(); ta.focus(); }
+  });
+
+  const showToast = (msg) => {
+    const t = $("#toast"); t.textContent = msg; t.style.display="block";
+    setTimeout(()=>{ t.style.display="none"; }, 2600);
+  }
+
+  // Copiar LaTeX
+  $("#copyBtn").addEventListener("click", async ()=>{
+    const res = $("#resultLatex").textContent.trim();
+    if(!res){ showToast("No hay resultado aún"); return; }
+    try{ await navigator.clipboard.writeText(res.replace(/^\\$|\\$/g,"")); showToast("Copiado ✓"); }
+    catch{ showToast("No se pudo copiar"); }
+  });
+
+  // Limpiar
+  $("#clearBtn").onclick = ()=>{ ta.value=""; autoresize(); $("#result").style.display="none"; };
+
+  // Resolver
+  const solve = async () => {
+    const status = $("#status");
+    const errorToast = (m)=>{ showToast(m); }
+    const btn = $("#solveBtn");
+    const result=$("#result"), problem=$("#problem"), out=$("#resultLatex"),
+          steps=$("#steps"), checks=$("#checks");
+
+    const expr = ta.value.trim();
+    if(!expr){ errorToast("Escribí una integral, por ejemplo: x*exp(2*x) dx"); return; }
+
+    btn.disabled = true; status.innerHTML = '<span class="spinner"></span>Resolviendo…';
+
+    try{
+      const r = await fetch("/solve",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({type:"integral", input:expr})
+      });
+      const data = await r.json();
+      if(!r.ok || data.error){ throw new Error(data.error || "Error"); }
+
+      problem.innerHTML = "$"+data.problem_latex+"$";
+      out.innerHTML = "$"+data.result_latex+"$";
+
+      steps.innerHTML = "";
+      (data.steps_latex || []).forEach(s=>{
+        const li = document.createElement("li");
+        li.innerHTML = s.includes("$") ? s : "$"+s+"$";
+        steps.appendChild(li);
+      });
+
+      checks.innerHTML = "";
+      (data.checks || []).forEach(c=>{
+        const p = document.createElement("p");
+        p.innerHTML = "$"+c+"$";
+        checks.appendChild(p);
+      });
+
+      result.style.display = "grid";
+      await window.MathJax?.typesetPromise?.();
+    }catch(e){
+      errorToast(e.message);
+    }finally{
+      btn.disabled = false;
+      status.textContent = "";
+    }
+  };
+
+  $("#solveBtn").addEventListener("click", solve);
+  // Ctrl/⌘ + Enter
+  window.addEventListener("keydown",(e)=>{
+    if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); solve(); }
+  });
 </script>
-</body></html>
+</body>
+</html>
 """
