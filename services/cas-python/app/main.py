@@ -99,13 +99,27 @@ def index():
 
   /* Tema claro cuando html[data-theme="light"] */
   :root[data-theme="light"]{
-    --bg:#f6f8ff; --fg:#f2f4ff; --fg-2:#ffffff;
-    --txt:#1a2033; --muted:#637089;
-    --primary:#3558ff; --primary-2:#5f7cff; --accent:#0fba92;
-    --card:rgba(255,255,255,.85); --card-border:rgba(10,15,40,.08);
-    --shadow:0 10px 25px rgba(25,35,80,.15);
-    --glow: rgba(0,224,184,.03); /* más tenue en claro */
+    --bg:#eef2fb; --fg:#e7ecfa; --fg-2:#f6f8ff;
+    --txt:#1e2435; --muted:#596580;
+    --primary:#3558ff; --primary-2:#5f7cff; --accent:#10a98f;
+    --card:rgba(255,255,255,.72); --card-border:rgba(10,15,40,.06);
+    --shadow:0 8px 18px rgba(25,35,80,.10);
+    --glow: rgba(0,224,184,.02); /* más tenue en claro */
   }
+
+  /* Superficies (textarea y cajas) un pelín menos blancas en claro */
+  html[data-theme="light"] textarea,
+  html[data-theme="light"] .box{
+    /* mezcla la superficie con un gris-azulado suave para bajar el blanco puro */
+    background: color-mix(in srgb, var(--fg-2) 80%, #e9eefb);
+  }
+
+  /* El glassmorphism del tema claro un poco menos saturado/brillante */
+  html[data-theme="light"] .card{
+    backdrop-filter: blur(12px) saturate(108%);
+    -webkit-backdrop-filter: blur(12px) saturate(108%);
+  }
+
 
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -295,7 +309,11 @@ def index():
     </section>
 
     <div id="toast" class="toast"></div>
-    <footer class="footer">Hecho con ❤️ para Cálculo II · MathJax en cliente</footer>
+    <footer class="footer">
+      Aplicación creada por "Los Cálculos Renales"
+      <br>
+      
+    </footer>
   </div>
 
 <script>
