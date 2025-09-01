@@ -3,10 +3,22 @@ services:
     name: calc2-bot
     env: python
     plan: free
+
+    # 1) Hace que tanto el build como el run se ejecuten dentro de services/cas-python
     workingDirectory: services/cas-python
-    buildCommand: pip install --upgrade pip && pip install -r services/cas-python/requirements-prod.txt
-    startCommand: uvicorn services.cas-python.main:app --host 0.0.0.0 --port $PORT
+
+    # 2) Instalación: al tener workingDirectory, el path es solo el archivo local
+    buildCommand: pip install --upgrade pip && pip install -r requirements-prod.txt
+
+    # 3) Ejecutamos uvicorn contra el paquete app (carpeta services/cas-python/app)
+    #    OBLIGATORIO: que exista services/cas-python/app/__init__.py (puede estar vacío)
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+
+    # 4) Con esto Render marca el servicio como “ready” cuando /health responde 200
+    healthCheckPath: /health
+
     autoDeploy: true
+
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: "3.11"

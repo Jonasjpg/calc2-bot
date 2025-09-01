@@ -1,8 +1,9 @@
 # services/cas-python/app/main.py
 # Notas:
-# - Devuelve JSON también en errores para que el frontend no falle con "Unexpected token".
-# - CORS abierto para pruebas. Restringir en producción.
-# - La UI incluye tema claro/oscuro usando data-theme (sin @media) y manejo robusto del fetch.
+# - Siempre respondemos JSON en /solve (también en errores) para evitar "Unexpected token" en el frontend.
+# - CORS abierto para pruebas. En producción restringí dominios.
+# - La UI usa data-theme para claro/oscuro y un glow suave que sigue el cursor.
+# - El endpoint /health lo usa Render para marcar el servicio como "ready".
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +14,7 @@ from .schemas import SolveRequest
 
 app = FastAPI(title="Calc2 Bot MVP (Python)", version="1.0.0")
 
-# CORS (abrir solo a nuestros dominios en prod)
+# CORS (en prod conviene limitar orígenes)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,11 +25,16 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
+    # Render hace ping a este path: si responde 200, considera que el servicio está up
     return {"ok": True}
 
 @app.post("/solve")
 def solve(req: SolveRequest):
-    # Manejo de errores para garantizar siempre JSON
+    """
+    Procesa integrales. Siempre retorna JSON.
+    Si type != "integral", devolvemos 400 con mensaje claro.
+    Ante excepciones, 500 con mensaje amigable.
+    """
     try:
         if req.type.lower() != "integral":
             return JSONResponse(
@@ -47,7 +53,7 @@ def solve(req: SolveRequest):
             },
         )
 
-# UI
+# UI simple (HTML embebido) — sin dependencias extra
 @app.get("/", response_class=HTMLResponse)
 def index():
     return """
@@ -58,16 +64,15 @@ def index():
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Calc2 Bot — MVP</title>
 
-<!-- Tema: fijar data-theme antes del primer render -->
+<!-- Fijar el tema antes del primer render (si no hay preferencia, arrancamos en dark) -->
 <script>
   (function(){
-    var theme = localStorage.getItem("theme") ||
-                (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    var theme = localStorage.getItem("theme") || "dark";
     document.documentElement.setAttribute("data-theme", theme);
   })();
 </script>
 
-<!-- MathJax -->
+<!-- MathJax para render LaTeX -->
 <script>
   window.MathJax = {
     tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']] },
@@ -77,34 +82,35 @@ def index():
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
 <style>
-  /* Tema por variables. Por defecto: oscuro */
+  /* Variables de tema (oscuro por defecto) */
   :root{
-    /* Se agregan --mx/--my (posición del cursor) y --glow (color del halo) */
     --bg:#0f1222; --fg:#0b0f1a; --fg-2:#151a2b;
     --txt:#eaf0ff; --muted:#9aa3b2;
     --primary:#7c9cff; --primary-2:#8fb0ff; --accent:#00e0b8;
     --danger:#ff6b6b; --ring:rgba(124,156,255,.55);
     --card:rgba(255,255,255,.06); --card-border:rgba(255,255,255,.14);
     --shadow:0 10px 30px rgba(10,15,40,.35);
-    /* Posición del halo y color del glow (turquesa muy leve) */
+
+    /* Variables para el glow que sigue al cursor */
     --mx: 50vw;
     --my: 50vh;
-    --glow: rgba(0,224,184,.085);
+    --glow: rgba(0,224,184,.085); /* turquesa muy leve */
   }
-  /* Claro cuando <html data-theme="light"> */
+
+  /* Tema claro cuando html[data-theme="light"] */
   :root[data-theme="light"]{
     --bg:#f6f8ff; --fg:#f2f4ff; --fg-2:#ffffff;
     --txt:#1a2033; --muted:#637089;
     --primary:#3558ff; --primary-2:#5f7cff; --accent:#0fba92;
     --card:rgba(255,255,255,.85); --card-border:rgba(10,15,40,.08);
     --shadow:0 10px 25px rgba(25,35,80,.15);
-    /* En claro bajamos casi a cero la intensidad del halo */
-    --glow: rgba(0,224,184,.03);
+    --glow: rgba(0,224,184,.03); /* más tenue en claro */
   }
 
   *{box-sizing:border-box}
   html,body{height:100%}
-  /* Fondo con glow que sigue al cursor + degradados existentes */
+
+  /* Fondo con glow que sigue al cursor + degradados */
   body{
     margin:0;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
@@ -123,7 +129,7 @@ def index():
         background: linear-gradient(135deg,var(--primary),var(--accent)); box-shadow: var(--shadow)}
   .title{font-weight:800;letter-spacing:.3px;font-size:22px}
   .sub{color:var(--muted);font-size:13px}
-  
+
   /* Tarjetas con glassmorphism (transparencia + blur) */
   .card{
     background: var(--card);
@@ -134,6 +140,7 @@ def index():
     backdrop-filter: blur(14px) saturate(120%);
     -webkit-backdrop-filter: blur(14px) saturate(120%); /* Safari/iOS */
   }
+
   .grid{display:grid;gap:16px}
   @media (min-width:960px){ .grid-2{grid-template-columns:1fr 1fr} }
 
@@ -171,6 +178,7 @@ def index():
   .result-kv{display:grid;gap:8px}
   .kv{display:flex;gap:8px;align-items:flex-start}
   .kv b{min-width:100px;display:inline-block}
+
   /* Contenedores de texto con glassmorphism */
   .box{
     background: color-mix(in srgb, var(--fg-2) 70%, transparent);
@@ -181,7 +189,7 @@ def index():
     backdrop-filter: blur(10px) saturate(120%);
     -webkit-backdrop-filter: blur(10px) saturate(120%);
   }
-  
+
   /* Realce leve al pasar el mouse por elementos relevantes */
   .card:hover, .box:hover, textarea:hover{
     border-color: color-mix(in srgb, var(--primary-2) 60%, transparent);
@@ -261,7 +269,7 @@ def index():
 <script>
   const $ = (s) => document.querySelector(s);
 
-  // Tema claro/oscuro con data-theme
+  // Toggle claro/oscuro con data-theme
   const themeBtn = $("#themeBtn");
   let theme = document.documentElement.getAttribute("data-theme") || "dark";
   const applyTheme = () => document.documentElement.setAttribute("data-theme", theme);
@@ -281,6 +289,7 @@ def index():
     c.onclick = ()=>{ ta.value = c.dataset.eg; autoresize(); ta.focus(); }
   });
 
+  // Toast simple
   const showToast = (msg) => {
     const t = $("#toast"); t.textContent = msg; t.style.display="block";
     setTimeout(()=>{ t.style.display="none"; }, 2600);
@@ -297,7 +306,7 @@ def index():
   // Limpiar
   $("#clearBtn").onclick = ()=>{ ta.value=""; autoresize(); $("#result").style.display="none"; };
 
-  // Resolver con manejo robusto de respuesta
+  // Resolver (manejo robusto de respuesta)
   const solve = async () => {
     const status = $("#status");
     const btn = $("#solveBtn");
@@ -312,15 +321,12 @@ def index():
     try{
       const r = await fetch("/solve",{
         method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "Accept":"application/json"
-        },
+        headers:{ "Content-Type":"application/json", "Accept":"application/json" },
         body: JSON.stringify({type:"integral", input:expr})
       });
 
       const ct = r.headers.get("content-type") || "";
-      const raw = await r.text();
+      const raw = await r.text();     // siempre leo texto primero
       let data;
       if (ct.includes("application/json")) {
         try { data = JSON.parse(raw); } catch { throw new Error("Respuesta inválida"); }
@@ -358,46 +364,26 @@ def index():
   };
 
   $("#solveBtn").addEventListener("click", solve);
-  // Ctrl/⌘ + Enter
+
+  // Atajo Ctrl/⌘ + Enter
   window.addEventListener("keydown",(e)=>{
     if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); solve(); }
   });
 
-  /* Glow que sigue al cursor.
-     Actualiza las variables CSS --mx y --my con suavizado para dar sensación de flotado. */
+  /* Glow que sigue al cursor: actualiza --mx y --my con easing para efecto suave */
   (()=>{
     const root = document.documentElement;
-
-    // Set inicial al centro de la ventana
-    let tx = innerWidth * 0.5, ty = innerHeight * 0.5;
-    let cx = tx, cy = ty;
-
-    const set = (x, y) => {
-      root.style.setProperty("--mx", x + "px");
-      root.style.setProperty("--my", y + "px");
-    };
+    let tx = innerWidth * 0.5, ty = innerHeight * 0.5; // target
+    let cx = tx, cy = ty;                              // current
+    const set = (x, y) => { root.style.setProperty("--mx", x + "px"); root.style.setProperty("--my", y + "px"); }
+    const lerp = (a,b,t)=>a+(b-a)*t;
     set(tx, ty);
 
-    const lerp = (a,b,t)=>a+(b-a)*t;
-
-    function loop(){
-      // 0.12 controla la suavidad del seguimiento
-      cx = lerp(cx, tx, 0.12);
-      cy = lerp(cy, ty, 0.12);
-      set(cx, cy);
-      requestAnimationFrame(loop);
-    }
+    function loop(){ cx = lerp(cx, tx, 0.12); cy = lerp(cy, ty, 0.12); set(cx, cy); requestAnimationFrame(loop); }
     loop();
 
-    // Captura posición del puntero; passive para no bloquear el hilo principal
-    addEventListener("pointermove", (e)=>{
-      tx = e.clientX; ty = e.clientY;
-    }, {passive:true});
-
-    // Opcional: recentrar si cambia el tamaño de la ventana
-    addEventListener("resize", ()=>{
-      tx = innerWidth * 0.5; ty = innerHeight * 0.5;
-    });
+    addEventListener("pointermove", (e)=>{ tx = e.clientX; ty = e.clientY; }, {passive:true});
+    addEventListener("resize", ()=>{ tx = innerWidth * 0.5; ty = innerHeight * 0.5; });
   })();
 </script>
 </body>
