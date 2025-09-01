@@ -104,13 +104,13 @@ def index():
 
   *{box-sizing:border-box}
   html,body{height:100%}
+  /* Fondo con glow que sigue al cursor + degradados existentes */
   body{
     margin:0;
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
     color:var(--txt);
     background:
-      /* En claro bajamos casi a cero la intensidad del halo */
-      --glow: rgba(0,224,184,.03);
+      radial-gradient(220px 220px at var(--mx) var(--my), var(--glow), transparent 60%),
       radial-gradient(1200px 600px at 10% -20%, #2a3cff22 15%, transparent 50%),
       radial-gradient(1300px 700px at 110% 0%, #00e0b822 10%, transparent 55%),
       linear-gradient(180deg, var(--bg), var(--fg));
@@ -362,7 +362,7 @@ def index():
   window.addEventListener("keydown",(e)=>{
     if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); solve(); }
   });
-  
+
   /* Glow que sigue al cursor.
      Actualiza las variables CSS --mx y --my con suavizado para dar sensación de flotado. */
   (()=>{
