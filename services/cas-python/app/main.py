@@ -207,6 +207,33 @@ def index():
            border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
            animation: spin .8s linear infinite;display:inline-block;margin-right:8px}
   @keyframes spin{to{transform:rotate(1turn)}}
+
+  /* ===== Easter egg: Constante de integración (+ C) ===== */
+  .right-tools{ display:flex; align-items:center; gap:10px }
+
+    #constC{
+    position:relative;
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:6px 10px; border-radius:999px; font-weight:800; letter-spacing:.3px;
+    font-size:13px; line-height:1; user-select:none; cursor:pointer;
+    border:1px solid var(--card-border);
+    background: color-mix(in srgb, var(--fg-2) 70%, transparent);
+    color:var(--txt);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    transition: transform .18s cubic-bezier(.2,.8,.2,1), border-color .15s, box-shadow .15s;
+  }
+  #constC::after{
+    content:''; position:absolute; inset:-6px; border-radius:inherit; pointer-events:none;
+    background: radial-gradient(120px 120px at 50% 40%, rgba(0,224,184,.15), transparent 60%);
+    opacity:0; transition: opacity .2s;
+  }
+  #constC:hover::after{ opacity:.85 }
+
+  @media (prefers-reduced-motion: reduce){
+    #constC{ transition: border-color .15s, box-shadow .15s; }
+  }
 </style>
 </head>
 <body>
@@ -219,7 +246,12 @@ def index():
           <div class="sub">FastAPI + SymPy · Integrales con verificación</div>
         </div>
       </div>
+      <div class="right-tools">
       <button id="themeBtn" class="btn ghost" title="Cambiar tema">🌓</button>
+        <div class="egg-wrap">
+          <button id="constC" title="Constante de integración">+ C</button>
+        </div>
+      </div>
     </header>
 
     <section class="card">
@@ -268,7 +300,7 @@ def index():
 
 <script>
   const $ = (s) => document.querySelector(s);
-
+  
   // Toggle claro/oscuro con data-theme
   const themeBtn = $("#themeBtn");
   let theme = document.documentElement.getAttribute("data-theme") || "dark";
@@ -384,6 +416,53 @@ def index():
 
     addEventListener("pointermove", (e)=>{ tx = e.clientX; ty = e.clientY; }, {passive:true});
     addEventListener("resize", ()=>{ tx = innerWidth * 0.5; ty = innerHeight * 0.5; });
+  })();
+
+    /* ===== Easter egg "+ C" =====
+    - Cerca del puntero → el botón “+ C” salta un poco (se “escapa”).
+    - Vuelve a su posición tras ~1.4s.
+    - Click → copia "+ C" al portapapeles y, si existe showToast, avisa.
+  */
+  (() => {
+    const btn = document.getElementById('constC');
+    if (!btn) return;
+
+    let respawnTO = null;
+    const clamp = (v,min,max) => Math.max(min, Math.min(max, v));
+
+    function jump(e){
+      const r = btn.getBoundingClientRect();
+      const cx = r.left + r.width/2;
+      const cy = r.top  + r.height/2;
+
+      const p = e.touches ? e.touches[0] : e;
+      const mx = p.clientX, my = p.clientY;
+
+      let dx = cx - mx, dy = cy - my;
+      const len = Math.hypot(dx,dy) || 1;
+      dx /= len; dy /= len;
+
+      const dist = 90 + Math.random()*120;            // distancia del “salto”
+      let tx = dx*dist, ty = dy*dist;
+
+      const vw = window.innerWidth, vh = window.innerHeight;
+      tx = clamp(tx, -r.left + 12,  vw - r.right  - 12);
+      ty = clamp(ty, -r.top  + 12,  vh - r.bottom - 12);
+
+      btn.style.transform = `translate(${tx}px, ${ty}px) rotate(${(Math.random()*10-5).toFixed(1)}deg)`;
+
+      clearTimeout(respawnTO);
+      respawnTO = setTimeout(() => { btn.style.transform = 'translate(0, 0)'; }, 1400);
+    }
+
+    btn.addEventListener('mouseenter', jump);
+    btn.addEventListener('mousemove', jump);
+    btn.addEventListener('touchstart', jump, {passive:true});
+
+    btn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText('+ C'); } catch {}
+      if (typeof window.showToast === 'function') showToast('+ C copiado');
+    });
   })();
 </script>
 </body>
