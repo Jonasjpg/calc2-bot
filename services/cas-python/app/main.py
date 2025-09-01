@@ -79,12 +79,17 @@ def index():
 <style>
   /* Tema por variables. Por defecto: oscuro */
   :root{
+    /* Se agregan --mx/--my (posición del cursor) y --glow (color del halo) */
     --bg:#0f1222; --fg:#0b0f1a; --fg-2:#151a2b;
     --txt:#eaf0ff; --muted:#9aa3b2;
     --primary:#7c9cff; --primary-2:#8fb0ff; --accent:#00e0b8;
     --danger:#ff6b6b; --ring:rgba(124,156,255,.55);
     --card:rgba(255,255,255,.06); --card-border:rgba(255,255,255,.14);
     --shadow:0 10px 30px rgba(10,15,40,.35);
+    /* Posición del halo y color del glow (turquesa muy leve) */
+    --mx: 50vw;
+    --my: 50vh;
+    --glow: rgba(0,224,184,.085);
   }
   /* Claro cuando <html data-theme="light"> */
   :root[data-theme="light"]{
@@ -93,6 +98,8 @@ def index():
     --primary:#3558ff; --primary-2:#5f7cff; --accent:#0fba92;
     --card:rgba(255,255,255,.85); --card-border:rgba(10,15,40,.08);
     --shadow:0 10px 25px rgba(25,35,80,.15);
+    /* En claro bajamos casi a cero la intensidad del halo */
+    --glow: rgba(0,224,184,.03);
   }
 
   *{box-sizing:border-box}
@@ -102,6 +109,8 @@ def index():
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
     color:var(--txt);
     background:
+      /* En claro bajamos casi a cero la intensidad del halo */
+      --glow: rgba(0,224,184,.03);
       radial-gradient(1200px 600px at 10% -20%, #2a3cff22 15%, transparent 50%),
       radial-gradient(1300px 700px at 110% 0%, #00e0b822 10%, transparent 55%),
       linear-gradient(180deg, var(--bg), var(--fg));
@@ -114,11 +123,16 @@ def index():
         background: linear-gradient(135deg,var(--primary),var(--accent)); box-shadow: var(--shadow)}
   .title{font-weight:800;letter-spacing:.3px;font-size:22px}
   .sub{color:var(--muted);font-size:13px}
-
+  
+  /* Tarjetas con glassmorphism (transparencia + blur) */
   .card{
-    background:var(--card); border:1px solid var(--card-border);
-    border-radius:18px; padding:18px; box-shadow: var(--shadow);
-    backdrop-filter: blur(10px);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%); /* Safari/iOS */
   }
   .grid{display:grid;gap:16px}
   @media (min-width:960px){ .grid-2{grid-template-columns:1fr 1fr} }
@@ -157,7 +171,22 @@ def index():
   .result-kv{display:grid;gap:8px}
   .kv{display:flex;gap:8px;align-items:flex-start}
   .kv b{min-width:100px;display:inline-block}
-  .box{background:var(--fg-2);border:1px solid var(--card-border);border-radius:12px;padding:12px;overflow:auto}
+  /* Contenedores de texto con glassmorphism */
+  .box{
+    background: color-mix(in srgb, var(--fg-2) 70%, transparent);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 12px;
+    overflow: auto;
+    backdrop-filter: blur(10px) saturate(120%);
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
+  }
+  
+  /* Realce leve al pasar el mouse por elementos relevantes */
+  .card:hover, .box:hover, textarea:hover{
+    border-color: color-mix(in srgb, var(--primary-2) 60%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-2) 35%, transparent);
+  }
 
   .list{margin:0;padding-left:18px}
   .tools{display:flex;gap:8px;align-items:center;justify-content:flex-end}
@@ -333,6 +362,43 @@ def index():
   window.addEventListener("keydown",(e)=>{
     if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); solve(); }
   });
+  
+  /* Glow que sigue al cursor.
+     Actualiza las variables CSS --mx y --my con suavizado para dar sensación de flotado. */
+  (()=>{
+    const root = document.documentElement;
+
+    // Set inicial al centro de la ventana
+    let tx = innerWidth * 0.5, ty = innerHeight * 0.5;
+    let cx = tx, cy = ty;
+
+    const set = (x, y) => {
+      root.style.setProperty("--mx", x + "px");
+      root.style.setProperty("--my", y + "px");
+    };
+    set(tx, ty);
+
+    const lerp = (a,b,t)=>a+(b-a)*t;
+
+    function loop(){
+      // 0.12 controla la suavidad del seguimiento
+      cx = lerp(cx, tx, 0.12);
+      cy = lerp(cy, ty, 0.12);
+      set(cx, cy);
+      requestAnimationFrame(loop);
+    }
+    loop();
+
+    // Captura posición del puntero; passive para no bloquear el hilo principal
+    addEventListener("pointermove", (e)=>{
+      tx = e.clientX; ty = e.clientY;
+    }, {passive:true});
+
+    // Opcional: recentrar si cambia el tamaño de la ventana
+    addEventListener("resize", ()=>{
+      tx = innerWidth * 0.5; ty = innerHeight * 0.5;
+    });
+  })();
 </script>
 </body>
 </html>
