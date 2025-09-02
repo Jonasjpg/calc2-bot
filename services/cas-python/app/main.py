@@ -62,7 +62,7 @@ def index():
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Calc2 Bot — MVP</title>
+<title>Xdx - integrales</title>
 
 <!-- Fijar el tema antes del primer render (si no hay preferencia, arrancamos en dark) -->
 <script>
@@ -139,8 +139,16 @@ def index():
   .wrap{max-width:980px;margin-inline:auto;padding:32px 18px 80px}
   .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
   .brand{display:flex;gap:12px;align-items:center}
-  .logo{width:40px;height:40px;border-radius:12px;
-        background: linear-gradient(135deg,var(--primary),var(--accent)); box-shadow: var(--shadow)}
+  .logo{
+          width:40px;
+          height:40px;
+          border-radius:12px;
+          overflow:hidden;           /* recorta el SVG si se sale */
+          box-shadow: var(--shadow);
+          /* si tenías un background aquí, quitalo para no duplicar el gradiente */
+          background: none;
+        }
+        .logo svg{ width:100%; height:100%; display:block }
   .title{font-weight:800;letter-spacing:.3px;font-size:22px}
   .sub{color:var(--muted);font-size:13px}
 
@@ -254,9 +262,37 @@ def index():
   <div class="wrap">
     <header class="nav">
       <div class="brand">
-        <div class="logo"></div>
+        <div class="logo" aria-label="xdx logo">
+          <svg viewBox="0 0 64 64" role="img" aria-label="Marca xdx">
+            <defs>
+              <!-- Gradiente usa las variables del tema -->
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="var(--primary)"/>
+                <stop offset="100%" stop-color="var(--accent)"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Fondo redondeado con gradiente -->
+            <rect x="1" y="1" width="62" height="62" rx="14" fill="url(#g)"/>
+
+            <!-- Símbolo ∫ estilizado (trazo) -->
+            <g fill="none" stroke="rgba(255,255,255,.92)" stroke-width="4" stroke-linecap="round">
+              <!-- curva tipo integral; simple y legible a 40px -->
+              <path d="M34 12c-10 0-12 40 0 40c8 0 8-6 8-10"/>
+            </g>
+
+            <!-- 'dx' en esquina inferior derecha -->
+            <text x="37" y="46"
+                  fill="rgba(255,255,255,.96)"
+                  font-size="12"
+                  font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+              dx
+            </text>
+          </svg>
+        </div>
+
         <div>
-          <div class="title">Calc2 Bot</div>
+          <div class="title">xdx</div>
           <div class="sub">FastAPI + SymPy · Integrales con verificación</div>
         </div>
       </div>
