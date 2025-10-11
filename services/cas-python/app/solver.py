@@ -3,7 +3,7 @@ from sympy.parsing.sympy_parser import parse_expr
 from sympy.printing.latex import latex
 
 def _sanitize(text: str) -> str:
-    # Permite inputs tipo "∫ x*exp(2*x) dx" o "integrate x*exp(2*x) dx"
+    # Normaliza entradas que incluyen símbolos o palabras clave: elimina "∫", "integrate" y "dx"
     return (text.replace("∫", "").replace("integrate", "").replace("dx", "").strip())
 
 def solve_integral(text: str):

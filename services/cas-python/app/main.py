@@ -1,7 +1,7 @@
 # services/cas-python/app/main.py
 # Notas:
 # - Siempre respondemos JSON en /solve (también en errores) para evitar "Unexpected token" en el frontend.
-# - CORS abierto para pruebas. En producción restringí dominios.
+# - CORS abierto para pruebas; en producción se restringen orígenes permitidos.
 # - La UI usa data-theme para claro/oscuro y un glow suave que sigue el cursor.
 # - El endpoint /health lo usa Render para marcar el servicio como "ready".
 
@@ -14,7 +14,7 @@ from .schemas import SolveRequest
 
 app = FastAPI(title="Calc2 Bot MVP (Python)", version="1.0.0")
 
-# CORS (en prod conviene limitar orígenes)
+# CORS (configuración abierta para pruebas)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,7 +25,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    # Render hace ping a este path: si responde 200, considera que el servicio está up
+    # Render hace ping a este path: si responde 200, considera que el servicio está "ready".
     return {"ok": True}
 
 @app.post("/solve")
@@ -33,13 +33,13 @@ def solve(req: SolveRequest):
     """
     Procesa integrales. Siempre retorna JSON.
     Si type != "integral", devolvemos 400 con mensaje claro.
-    Ante excepciones, 500 con mensaje amigable.
+    Ante excepciones, 500 con mensaje informativo.
     """
     try:
         if req.type.lower() != "integral":
             return JSONResponse(
                 status_code=400,
-                content={"error": "MVP: solo integrales indefinidas (type='integral')"},
+                content={"error": "Solo integrales indefinidas (type='integral')"},
             )
         data = solve_integral(req.input)
         return JSONResponse(status_code=200, content=data)
@@ -53,7 +53,7 @@ def solve(req: SolveRequest):
             },
         )
 
-# UI simple (HTML embebido) — sin dependencias extra
+# UI simple (HTML embebido)
 @app.get("/", response_class=HTMLResponse)
 def index():
     return """
@@ -64,7 +64,7 @@ def index():
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Xdx - integrales</title>
 
-<!-- Fijar el tema antes del primer render (si no hay preferencia, arrancamos en dark) -->
+<!-- Fijar el tema antes del primer render (si no hay preferencia, inicia en modo oscuro) -->
 <script>
   (function(){
     var theme = localStorage.getItem("theme") || "dark";
@@ -91,7 +91,7 @@ def index():
     --card:rgba(255,255,255,.06); --card-border:rgba(255,255,255,.14);
     --shadow:0 10px 30px rgba(10,15,40,.35);
 
-    /* Variables para el glow que sigue al cursor */
+    /* Variables para el brillo que sigue al cursor */
     --mx: 50vw;
     --my: 50vh;
     --glow: rgba(0,224,184,.085); /* turquesa muy leve */
@@ -110,11 +110,11 @@ def index():
   /* Superficies (textarea y cajas) un pelín menos blancas en claro */
   html[data-theme="light"] textarea,
   html[data-theme="light"] .box{
-    /* mezcla la superficie con un gris-azulado suave para bajar el blanco puro */
+    /* superficie ligeramente mezclada para reducir blanco puro */
     background: color-mix(in srgb, var(--fg-2) 80%, #e9eefb);
   }
 
-  /* El glassmorphism del tema claro un poco menos saturado/brillante */
+  /* Glassmorphism del tema claro */
   html[data-theme="light"] .card{
     backdrop-filter: blur(12px) saturate(108%);
     -webkit-backdrop-filter: blur(12px) saturate(108%);
@@ -143,9 +143,9 @@ def index():
           width:40px;
           height:40px;
           border-radius:12px;
-          overflow:hidden;           /* recorta el SVG si se sale */
+          overflow:hidden;           /* recortar el SVG si se sale */
           box-shadow: var(--shadow);
-          /* si tenías un background aquí, quitalo para no duplicar el gradiente */
+          /* sin background para evitar duplicar el gradiente */
           background: none;
         }
         .logo svg{ width:100%; height:100%; display:block }
@@ -293,7 +293,7 @@ def index():
 
         <div>
           <div class="title">xdx</div>
-          <div class="sub">FastAPI + SymPy · Integrales con verificación</div>
+          <div class="sub">FastAPI + SymPy = Integrales con verificación</div>
         </div>
       </div>
       <div class="right-tools">
@@ -305,7 +305,7 @@ def index():
     </header>
 
     <section class="card">
-      <div class="label">Ingresá la integral (Ctrl/⌘+Enter para resolver)</div>
+      <div class="label">Ingresa la integral (Ctrl+Enter para resolver)</div>
       <textarea id="expr" placeholder="Ej: x*exp(2*x) dx"></textarea>
       <div class="row">
         <button id="solveBtn" class="btn">Resolver</button>
@@ -473,9 +473,9 @@ def index():
   })();
 
     /* ===== Easter egg "+ C" =====
-    - Cerca del puntero → el botón “+ C” salta un poco (se “escapa”).
+    - Cerca del puntero → el botón “+ C” se desplaza ligeramente.
     - Vuelve a su posición tras ~1.4s.
-    - Click → copia "+ C" al portapapeles y, si existe showToast, avisa.
+    - Click → copia "+ C" al portapapeles y, si existe showToast, muestra confirmación.
   */
   (() => {
     const btn = document.getElementById('constC');
@@ -496,7 +496,7 @@ def index():
       const len = Math.hypot(dx,dy) || 1;
       dx /= len; dy /= len;
 
-      const dist = 90 + Math.random()*120;            // distancia del “salto”
+      const dist = 90 + Math.random()*120;            # distancia del desplazamiento
       let tx = dx*dist, ty = dy*dist;
 
       const vw = window.innerWidth, vh = window.innerHeight;
