@@ -3,7 +3,7 @@ from sympy.parsing.sympy_parser import parse_expr
 from sympy.printing.latex import latex
 
 def _sanitize(text: str) -> str:
-    # Normaliza entradas que incluyen símbolos o palabras clave: elimina "∫", "integrate" y "dx"
+    # Permite inputs tipo "∫ x*exp(2*x) dx" o "integrate x*exp(2*x) dx"
     return (text.replace("∫", "").replace("integrate", "").replace("dx", "").strip())
 
 def solve_integral(text: str):
@@ -17,17 +17,17 @@ def solve_integral(text: str):
         r"Identificamos la integral en $x$.",
         r"Aplicamos reglas simbólicas (sustitución/partes según corresponda).",
         rf"Obtenemos: ${latex(res)} + C$",
-    ]
-
+        ]
+    
     checks = [
         rf"\\frac{{d}}{{dx}}\\left({latex(res)}\\right) = {latex(check)} \\\\ "
         + (r"\\text{✓ correcto}" if ok else r"\\text{✗ revisar}")
-    ]
-
+        ]
+    
     return {
         "problem_latex": rf"\\int {latex(expr)}\\,dx",
         "steps_latex": steps,
         "result_latex": rf"{latex(res)} + C",
         "checks": checks,
         "plots": []
-    }
+        }

@@ -25,7 +25,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    # Render hace ping a este path: si responde 200, considera que el servicio está up
+    # Render hace ping a este path: si responde 200, considera que el servicio está "ready"
     return {"ok": True}
 
 @app.post("/solve")
@@ -39,7 +39,7 @@ def solve(req: SolveRequest):
         if req.type.lower() != "integral":
             return JSONResponse(
                 status_code=400,
-                content={"error": "MVP: solo integrales indefinidas (type='integral')"},
+                content={"error": "Solo integrales indefinidas (type='integral')"},
             )
         data = solve_integral(req.input)
         return JSONResponse(status_code=200, content=data)
@@ -107,7 +107,7 @@ def index():
     --glow: rgba(0,224,184,.02); /* más tenue en claro */
   }
 
-  /* Superficies (textarea y cajas) un pelín menos blancas en claro */
+  /* Superficies (textarea y cajas) */
   html[data-theme="light"] textarea,
   html[data-theme="light"] .box{
     /* mezcla la superficie con un gris-azulado suave para bajar el blanco puro */
@@ -143,9 +143,9 @@ def index():
           width:40px;
           height:40px;
           border-radius:12px;
-          overflow:hidden;           /* recorta el SVG si se sale */
+          overflow:hidden;           /* recortar el SVG si se sale */
           box-shadow: var(--shadow);
-          /* si tenías un background aquí, quitalo para no duplicar el gradiente */
+          /* sin background para evitar duplicar el gradiente */
           background: none;
         }
         .logo svg{ width:100%; height:100%; display:block }
@@ -267,25 +267,33 @@ def index():
             <defs>
               <!-- Gradiente usa las variables del tema -->
               <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="var(--primary)"/>
-                <stop offset="100%" stop-color="var(--accent)"/>
+                <stop offset="0%" stop-color="#3558ff"/>
+                <stop offset="100%" stop-color="#00e0b8"/>
               </linearGradient>
             </defs>
 
             <!-- Fondo redondeado con gradiente -->
-            <rect x="1" y="1" width="62" height="62" rx="14" fill="url(#g)"/>
+            <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#g)" />
 
             <!-- Símbolo ∫ estilizado (trazo) -->
-            <g fill="none" stroke="rgba(255,255,255,.92)" stroke-width="4" stroke-linecap="round">
-              <!-- curva tipo integral; simple y legible a 40px -->
-              <path d="M34 12c-10 0-12 40 0 40c8 0 8-6 8-10"/>
-            </g>
+            <path
+              d="M34 12c-12 0-14 40 0 40c9 0 9-7 9-11"
+              stroke="white"
+              stroke-width="5"
+              stroke-linecap="round"
+              fill="none"
+              filter="url(#glow)"
+            />
 
             <!-- 'dx' en esquina inferior derecha -->
-            <text x="37" y="46"
-                  fill="rgba(255,255,255,.96)"
-                  font-size="12"
-                  font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+            <text
+              x="37"
+              y="47"
+              fill="white"
+              font-size="13"
+              font-weight="600"
+              font-family="Segoe UI, Roboto, system-ui"
+            >
               dx
             </text>
           </svg>
@@ -293,7 +301,7 @@ def index():
 
         <div>
           <div class="title">xdx</div>
-          <div class="sub">FastAPI + SymPy · Integrales con verificación</div>
+          <div class="sub">FastAPI + SymPy = Integrales con verificación</div>
         </div>
       </div>
       <div class="right-tools">
@@ -305,7 +313,7 @@ def index():
     </header>
 
     <section class="card">
-      <div class="label">Ingresá la integral (Ctrl/⌘+Enter para resolver)</div>
+      <div class="label">Ingresa la integral (Ctrl+Enter para resolver)</div>
       <textarea id="expr" placeholder="Ej: x*exp(2*x) dx"></textarea>
       <div class="row">
         <button id="solveBtn" class="btn">Resolver</button>
