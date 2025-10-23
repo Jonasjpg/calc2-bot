@@ -13,7 +13,7 @@ from .schemas import SolveRequest
 app = FastAPI(title="Calc2 Bot MVP (Python)", version="1.0.0")
 from fastapi.staticfiles import StaticFiles
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory="services/cas-python/app/static"), name="static")
 
 # CORS (en prod conviene limitar orígenes)
 app.add_middleware(
