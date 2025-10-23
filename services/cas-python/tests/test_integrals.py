@@ -21,3 +21,28 @@ def test_integral_basic():
     r = client.post("/solve", json=payload)
     assert r.status_code == 200
     assert "result_latex" in r.json()
+
+
+
+def test_integral_with_caret_power():
+    payload = {"type": "integral", "input": "x^2 dx"}
+    r = client.post("/solve", json=payload)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["result_latex"].endswith("+ C")
+
+def test_integral_with_integral_symbol_and_dx():
+    payload = {"type": "integral", "input": "∫ (2x+1)*exp(x) dx"}
+    r = client.post("/solve", json=payload)
+    assert r.status_code == 200
+    assert "result_latex" in r.json()
+
+def test_wrong_type_returns_422():
+    payload = {"type": "derivative", "input": "x^2"}
+    r = client.post("/solve", json=payload)
+    assert r.status_code == 422
+
+def test_empty_input_returns_422():
+    payload = {"type": "integral", "input": ""}
+    r = client.post("/solve", json=payload)
+    assert r.status_code == 422

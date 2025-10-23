@@ -28,29 +28,28 @@ def health():
     # Render hace ping a este path: si responde 200, considera que el servicio está "ready"
     return {"ok": True}
 
+
 @app.post("/solve")
 def solve(req: SolveRequest):
     """
     Procesa integrales. Siempre retorna JSON.
-    Si type != "integral", devolvemos 400 con mensaje claro.
-    Ante excepciones, 500 con mensaje amigable.
+    Si type != "integral", devolvemos 422 con mensaje claro.
+    Ante errores de parseo, 400 con detalle.
     """
+    if not hasattr(req, "type") or req.type is None:
+        return JSONResponse({"error": "Falta 'type'."}, status_code=422)
+    if req.type.lower() != "integral":
+        return JSONResponse({"error": "Tipo no soportado. Usa 'integral'."}, status_code=422)
+    if not getattr(req, "input", None):
+        return JSONResponse({"error": "Falta 'input' con la expresión."}, status_code=422)
     try:
-        if req.type.lower() != "integral":
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Solo integrales indefinidas (type='integral')"},
-            )
         data = solve_integral(req.input)
         return JSONResponse(status_code=200, content=data)
-    except Exception:
-        import traceback
-        traceback.print_exc()
+    except Exception as e:
+        # No exponemos trazas internas en producción; el detail ayuda durante pruebas
         return JSONResponse(
-            status_code=500,
-            content={
-                "error": "Error interno procesando la integral. Revisá la sintaxis (ej: x*exp(2*x) dx)."
-            },
+            status_code=400,
+            content={"error": "No pude interpretar la expresión. Revisa sintaxis (usa ^ o ** para potencias).", "detail": str(e)},
         )
 
 # UI simple (HTML embebido) — sin dependencias extra
