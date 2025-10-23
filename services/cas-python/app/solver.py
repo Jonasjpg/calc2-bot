@@ -1,4 +1,4 @@
-from typing import Dict
+﻿from typing import Dict
 import re
 from sympy import (
     symbols, Symbol, integrate, diff, sin, cos, tan, exp, log, sqrt,
@@ -19,8 +19,8 @@ SAFE_FUNCS: Dict[str, object] = {
 }
 
 # Transformaciones del parser:
-# - convert_xor: interpreta '^' como potencia en lugar de XOR
-# - implicit_multiplication_application: 2x -> 2*x, sin x -> sin(x)
+# convert_xor: interpreta '^' como potencia en lugar de XOR
+# implicit_multiplication_application: 2x -> 2*x, sin x -> sin(x)
 TRANSFORMS = standard_transformations + (
     convert_xor,
     implicit_multiplication_application,

@@ -1,9 +1,7 @@
-# services/cas-python/app/main.py
 # Notas:
 # - Siempre respondemos JSON en /solve (también en errores) para evitar "Unexpected token" en el frontend.
-# - CORS abierto para pruebas. En producción restringí dominios.
-# - La UI usa data-theme para claro/oscuro y un glow suave que sigue el cursor.
 # - El endpoint /health lo usa Render para marcar el servicio como "ready".
+# - La UI simple está embebida en este archivo para evitar dependencias extra.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,7 +44,6 @@ def solve(req: SolveRequest):
         data = solve_integral(req.input)
         return JSONResponse(status_code=200, content=data)
     except Exception as e:
-        # No exponemos trazas internas en producción; el detail ayuda durante pruebas
         return JSONResponse(
             status_code=400,
             content={"error": "No pude interpretar la expresión. Revisa sintaxis (usa ^ o ** para potencias).", "detail": str(e)},
@@ -142,9 +139,8 @@ def index():
           width:40px;
           height:40px;
           border-radius:12px;
-          overflow:hidden;           /* recortar el SVG si se sale */
+          overflow:hidden;
           box-shadow: var(--shadow);
-          /* sin background para evitar duplicar el gradiente */
           background: none;
         }
         .logo svg{ width:100%; height:100%; display:block }
@@ -458,7 +454,7 @@ def index():
 
   $("#solveBtn").addEventListener("click", solve);
 
-  // Atajo Ctrl/⌘ + Enter
+  // Atajo Ctrl + Enter
   window.addEventListener("keydown",(e)=>{
     if((e.metaKey || e.ctrlKey) && e.key === "Enter"){ e.preventDefault(); solve(); }
   });
