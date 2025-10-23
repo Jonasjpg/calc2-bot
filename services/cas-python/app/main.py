@@ -11,6 +11,9 @@ from .solver import solve_integral
 from .schemas import SolveRequest
 
 app = FastAPI(title="Calc2 Bot MVP (Python)", version="1.0.0")
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # CORS (en prod conviene limitar orígenes)
 app.add_middleware(
@@ -135,17 +138,18 @@ def index():
   .wrap{max-width:980px;margin-inline:auto;padding:32px 18px 80px}
   .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
   .brand{display:flex;gap:12px;align-items:center}
-  .logo{
-          width:40px;
-          height:40px;
-          border-radius:12px;
-          overflow:hidden;
-          box-shadow: var(--shadow);
-          background: none;
+        .logo {
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        .logo svg{ width:100%; height:100%; display:block }
-  .title{font-weight:800;letter-spacing:.3px;font-size:22px}
-  .sub{color:var(--muted);font-size:13px}
+        .logo img {
+          width: 100%;
+          height: auto;
+          border-radius: 12px; /* opcional: si querés mantener bordes suaves */
+        }
 
   /* Tarjetas con glassmorphism (transparencia + blur) */
   .card{
@@ -257,43 +261,10 @@ def index():
   <div class="wrap">
     <header class="nav">
       <div class="brand">
-        <div class="logo" aria-label="xdx logo">
-          <svg viewBox="0 0 64 64" role="img" aria-label="Marca xdx">
-            <defs>
-              <!-- Gradiente usa las variables del tema -->
-              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#3558ff"/>
-                <stop offset="100%" stop-color="#00e0b8"/>
-              </linearGradient>
-            </defs>
-
-            <!-- Fondo redondeado con gradiente -->
-            <rect x="1" y="1" width="62" height="62" rx="16" fill="url(#g)" />
-
-            <!-- Símbolo ∫ estilizado (trazo) -->
-            <path
-              d="M34 12c-12 0-14 40 0 40c9 0 9-7 9-11"
-              stroke="white"
-              stroke-width="5"
-              stroke-linecap="round"
-              fill="none"
-              filter="url(#glow)"
-            />
-
-            <!-- 'dx' en esquina inferior derecha -->
-            <text
-              x="37"
-              y="47"
-              fill="white"
-              font-size="13"
-              font-weight="600"
-              font-family="Segoe UI, Roboto, system-ui"
-            >
-              dx
-            </text>
-          </svg>
+        <div class="logo">
+          <img src="/static/logo_xdx.png" alt="Logo xdx" />
         </div>
-
+      
         <div>
           <div class="title">xdx</div>
           <div class="sub">FastAPI + SymPy = Integrales con verificación</div>
